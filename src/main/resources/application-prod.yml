@@ -1,0 +1,61 @@
+# Production Environment Configuration
+
+# Server Configuration
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+# Database Configuration
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/creditwise}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:password}
+    hikari:
+      connection-timeout: 20000
+      maximum-pool-size: 10
+  
+  jpa:
+    database-platform: org.hibernate.dialect.MySQLDialect
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+  
+  # Flyway Configuration
+  flyway:
+    enabled: true
+    url: ${DB_URL:jdbc:mysql://localhost:3306/creditwise}
+    user: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:password}
+    
+# Logging Configuration
+logging:
+  level:
+    com.creditwise: INFO
+    org.springframework: WARN
+    org.hibernate: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/creditwise.log
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:mySuperSecretProductionKeyThatShouldBeVeryLongAndSecure}
+  expiration: 86400000
+  refresh-expiration: 604800000
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when_authorized

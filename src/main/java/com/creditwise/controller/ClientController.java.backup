@@ -1,0 +1,94 @@
+package com.creditwise.controller;
+
+import com.creditwise.dto.ApiResponse;
+import com.creditwise.dto.ClientProfileDto;
+import com.creditwise.entity.CreditHealthScore;
+import com.creditwise.entity.CreditPlan;
+import com.creditwise.entity.User;
+import com.creditwise.service.CreditHealthScoreService;
+import com.creditwise.service.CreditPlanService;
+import com.creditwise.service.UserService;
+import com.creditwise.entity.ClientProfile;
+import com.creditwise.repository.ClientProfileRepository;
+import com.creditwise.security.CustomUserDetails;
+import com.creditwise.exception.ResourceNotFoundException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.UUID;
+
+@RestController
+@RequestMapping("/api/v1/client/")
+@CrossOrigin(origins = "*", maxAge = 3600)
+@PreAuthorize("hasRole('CLIENT')")
+public class ClientController {
+
+    @Autowired
+    private UserService userService;
+
+    @Autowired
+    private CreditHealthScoreService creditHealthScoreService;
+
+    @Autowired
+    private CreditPlanService creditPlanService;
+
+    @Autowired
+    private ClientProfileRepository clientProfileRepository;
+
+    @GetMapping("/profile")
+    public ResponseEntity<ApiResponse<ClientProfileDto>> getClientProfile(Authentication authentication) {
+        // Implementation depends on your existing code
+        return null; // Placeholder - using existing implementation
+    }
+
+    @PutMapping("/profile")
+    public ResponseEntity<ApiResponse<ClientProfileDto>> updateClientProfile(@RequestBody ClientProfileDto updatedProfile, Authentication authentication) {
+        // Implementation depends on your existing code
+        return null; // Placeholder - using existing implementation
+    }
+
+    @GetMapping("/credit-score")
+    public ResponseEntity<ApiResponse<CreditHealthScore>> getCreditScore(Authentication authentication) {
+        // Implementation depends on your existing code
+        return null; // Placeholder - using existing implementation
+    }
+
+    @GetMapping("/credit-scores")
+    public ResponseEntity<ApiResponse<List<CreditHealthScore>>> getAllCreditScores(Authentication authentication) {
+        // Implementation depends on your existing code
+        return null; // Placeholder - using existing implementation
+    }
+
+    @GetMapping("/credit-plans")
+    public ResponseEntity<ApiResponse<List<CreditPlan>>> getCreditPlans(Authentication authentication) {
+        // Implementation depends on your existing code
+        return null; // Placeholder - using existing implementation
+    }
+
+    @GetMapping("/credit-plans/{planId}")
+    public ResponseEntity<ApiResponse<CreditPlan>> getCreditPlanById(@PathVariable UUID planId, Authentication authentication) {
+        // Implementation depends on your existing code
+        return null; // Placeholder - using existing implementation
+    }
+
+    @GetMapping("/credit-plans/{planId}/tasks")
+    public ResponseEntity<ApiResponse<List<Object>>> getPlanTasks(@PathVariable UUID planId, Authentication authentication) {
+        // Implementation depends on your existing code
+        return null; // Placeholder - using existing implementation
+    }
+    
+    @GetMapping("/plan-status")
+    public ResponseEntity<ApiResponse<ClientProfile.PlanStatus>> getPlanStatus(Authentication authentication) {
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        UUID userId = userDetails.getUserId();
+        
+        ClientProfile clientProfile = clientProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("ClientProfile", "userId", userId));
+        
+        return ResponseEntity.ok(ApiResponse.success(clientProfile.getPlanStatus()));
+    }
+}

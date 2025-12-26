@@ -1,0 +1,59 @@
+# Development Environment Configuration
+
+# Server Configuration
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+# Database Configuration
+spring:
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: magic
+    password: magic123
+  
+  jpa:
+    database-platform: org.hibernate.dialect.H2Dialect
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+  
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+  
+  # Flyway Configuration
+  flyway:
+    enabled: true
+    
+  # Mail Configuration
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: usmaneletu2@gmail.com
+    password: ${EMAIL_PASSWORD:your_app_password_here}  # Use app password for Gmail
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+# Logging Configuration
+logging:
+  level:
+    com.creditwise: DEBUG
+    org.springframework: INFO
+    org.hibernate: DEBUG
+
+# JWT Configuration
+jwt:
+  secret: mySecretKeyForDevelopmentOnlyDoNotUseInProduction
+  expiration: 86400000
+  refresh-expiration: 604800000
