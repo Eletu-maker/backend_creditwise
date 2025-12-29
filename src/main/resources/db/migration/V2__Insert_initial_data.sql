@@ -19,10 +19,10 @@ INSERT INTO users (id, first_name, last_name, email, password, role, is_enabled,
 VALUES ('44444444-4444-4444-4444-444444444444', 'Jane', 'Client', 'jane.client@creditwise.com', 
         '$2a$10$8K1p/a0dhrxiowP.dnkgNORTWgdEDHn5L2/xjpEWuC.QQv4rKO9jO', 'CLIENT', TRUE, 'ACTIVE', NOW(), NOW());
 
--- Insert client profile
-INSERT INTO client_profiles (id, user_id, phone, address, city, state, zip_code, status, created_at, updated_at)
+-- Insert client_profiles 
+INSERT INTO client_profiles (id, user_id, first_name, last_name, email, phone_number, address, city, state, zip_code, status, created_at, updated_at)
 VALUES ('55555555-5555-5555-5555-555555555555', '44444444-4444-4444-4444-444444444444', 
-        '555-123-4567', '123 Main St', 'Anytown', 'CA', '12345', 'ACTIVE', NOW(), NOW());
+        'Jane', 'Client', 'jane.client@creditwise.com', '555-123-4567', '123 Main St', 'Anytown', 'CA', '12345', 'ACTIVE', NOW(), NOW());
 
 -- Insert sample content
 INSERT INTO contents (id, created_by_user_id, title, body, content_type, category, view_count, status, created_at, updated_at)

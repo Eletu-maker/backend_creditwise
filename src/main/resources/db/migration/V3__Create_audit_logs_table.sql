@@ -6,7 +6,7 @@ CREATE TABLE audit_logs (
     created_by VARCHAR(255),
     updated_by VARCHAR(255),
     status VARCHAR(20) DEFAULT 'ACTIVE',
-    user_id VARCHAR(255),
+    user_id VARCHAR(36),
     action VARCHAR(100) NOT NULL,
     resource_type VARCHAR(50),
     resource_id VARCHAR(255),
