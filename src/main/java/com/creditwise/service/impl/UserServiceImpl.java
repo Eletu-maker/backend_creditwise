@@ -2,8 +2,10 @@ package com.creditwise.service.impl;
 
 import com.creditwise.dto.RegisterClientRequest;
 import com.creditwise.dto.UserProfile;
+import com.creditwise.entity.ClientProfile;
 import com.creditwise.entity.User;
 import com.creditwise.exception.ResourceNotFoundException;
+import com.creditwise.repository.ClientProfileRepository;
 import com.creditwise.repository.UserRepository;
 import com.creditwise.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +20,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private UserRepository userRepository;
+    
+    @Autowired
+    private ClientProfileRepository clientProfileRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -37,8 +42,21 @@ public class UserServiceImpl implements UserService {
                 .role(User.Role.CLIENT)
                 .isEnabled(true)
                 .build();
+        
+        User savedUser = userRepository.save(user);
+        
+        // Create corresponding client profile
+        ClientProfile clientProfile = ClientProfile.builder()
+                .user(savedUser)
+                .firstName(request.getFirstName())
+                .lastName(request.getLastName())
+                .email(request.getEmail())
+                .phoneNumber(request.getPhone())
+                .build();
+        
+        clientProfileRepository.save(clientProfile);
 
-        return userRepository.save(user);
+        return savedUser;
     }
 
     @Override
