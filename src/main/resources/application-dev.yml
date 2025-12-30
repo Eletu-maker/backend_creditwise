@@ -9,15 +9,15 @@ server:
 # Database Configuration
 spring:
   datasource:
-    url: jdbc:h2:mem:testdb
+    url: ${DB_URL:jdbc:h2:mem:testdb}
     driver-class-name: org.h2.Driver
-    username: magic
-    password: magic123
+    username: ${DB_USERNAME:magic}
+    password: ${DB_PASSWORD:magic123}
   
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
-      ddl-auto: create-drop
+      ddl-auto: update
     show-sql: true
     properties:
       hibernate:
@@ -36,7 +36,7 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: usmaneletu2@gmail.com
+    username: ${EMAIL_USERNAME:usmaneletu2@gmail.com}
     password: ${EMAIL_PASSWORD:your_app_password_here}  # Use app password for Gmail
     properties:
       mail:
@@ -54,6 +54,11 @@ logging:
 
 # JWT Configuration
 jwt:
-  secret: mySecretKeyForDevelopmentOnlyDoNotUseInProduction
+  secret: ${JWT_SECRET:mySecretKeyForDevelopmentOnlyDoNotUseInProduction}
   expiration: 86400000
   refresh-expiration: 604800000
+
+# OTP Configuration
+app:
+  otp:
+    expiry-minutes: 5

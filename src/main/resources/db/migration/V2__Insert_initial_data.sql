@@ -1,7 +1,7 @@
 -- Insert admin user
 INSERT INTO users (id, first_name, last_name, email, password, role, is_enabled, status, created_at, updated_at)
 VALUES ('11111111-1111-1111-1111-111111111111', 'Admin', 'User', 'usmaneletu2@gmail.com', 
-        '$2a$10$IgYBImb6d5KkPgHncpE90eYkx6zq4.Tx3B5yQrJw8Y.zO6hJ9qFyG', 'ADMIN', TRUE, 'ACTIVE', NOW(), NOW());
+        '$2a$10$IIGEy.T9y5ziBKzaPBW6YeWKWkqZXXGemq9qM3wZaS5nCXDuEOBv', 'ADMIN', TRUE, 'ACTIVE', NOW(), NOW());
 
 -- Insert sample officer
 INSERT INTO users (id, first_name, last_name, email, password, role, is_enabled, status, created_at, updated_at)

@@ -6,8 +6,10 @@ import com.creditwise.dto.RegisterClientRequest;
 import com.creditwise.dto.UserProfile;
 import com.creditwise.entity.User;
 import com.creditwise.repository.UserRepository;
+import com.creditwise.security.CustomUserDetails;
 import com.creditwise.security.JwtUtils;
 import com.creditwise.service.AuthService;
+import com.creditwise.service.OtpAuthService;
 import com.creditwise.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -34,6 +36,9 @@ public class AuthServiceImpl implements AuthService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+    
+    @Autowired
+    private OtpAuthService otpAuthService;
 
     @Override
     public JwtResponse authenticateUser(LoginRequest loginRequest) {
@@ -45,7 +50,7 @@ public class AuthServiceImpl implements AuthService {
         String jwt = jwtUtils.generateJwtToken(authentication);
         String refreshToken = jwtUtils.generateRefreshToken(authentication);
 
-        com.creditwise.security.CustomUserDetails userDetails = (com.creditwise.security.CustomUserDetails) authentication.getPrincipal();
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         
         UserProfile userProfile = new UserProfile();
         userProfile.setId(userDetails.getUserId().toString());
@@ -71,7 +76,7 @@ public class AuthServiceImpl implements AuthService {
         String jwt = jwtUtils.generateJwtToken(authentication);
         String refreshToken = jwtUtils.generateRefreshToken(authentication);
         
-        com.creditwise.security.CustomUserDetails userDetails = (com.creditwise.security.CustomUserDetails) authentication.getPrincipal();
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         
         UserProfile userProfile = new UserProfile();
         userProfile.setId(userDetails.getUserId().toString());
@@ -82,5 +87,48 @@ public class AuthServiceImpl implements AuthService {
         userProfile.setEnabled(userDetails.getUser().isEnabled());
         
         return new JwtResponse(jwt, refreshToken, userProfile);
+    }
+    
+    @Override
+    public JwtResponse authenticateAdminWithOtp(String email, String otpCode) {
+        // Verify the OTP first
+        boolean isValidOtp = otpAuthService.verifyOtp(email, otpCode);
+        
+        if (!isValidOtp) {
+            throw new RuntimeException("Invalid or expired OTP");
+        }
+        
+        // Check if the email is the specific admin email
+        if (!"usmaneletu2@gmail.com".equals(email)) {
+            throw new RuntimeException("Access denied. You are not an admin.");
+        }
+        
+        // Find the user by email
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+        
+        String jwt = jwtUtils.generateJwtTokenForUser(user);
+        String refreshToken = jwtUtils.generateRefreshTokenForUser(user);
+        
+        UserProfile userProfile = new UserProfile();
+        userProfile.setId(user.getId().toString());
+        userProfile.setFirstName(user.getFirstName());
+        userProfile.setLastName(user.getLastName());
+        userProfile.setEmail(user.getEmail());
+        userProfile.setRole(user.getRole().name());
+        userProfile.setEnabled(user.isEnabled());
+
+        return new JwtResponse(jwt, refreshToken, userProfile);
+    }
+    
+    @Override
+    public String initiateAdminOtpLogin(String email) {
+        // Check if the email is the specific admin email
+        if (!"usmaneletu2@gmail.com".equals(email)) {
+            throw new RuntimeException("Access denied. You are not an admin.");
+        }
+        
+        // Generate and send OTP
+        return otpAuthService.generateAndSendOtp(email);
     }
 }
