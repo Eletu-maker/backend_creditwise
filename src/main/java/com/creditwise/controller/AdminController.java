@@ -1,15 +1,16 @@
 package com.creditwise.controller;
 
 import com.creditwise.dto.ApiResponse;
-import com.creditwise.dto.RegisterClientRequest;
+import com.creditwise.dto.RegisterOfficerRequest;
 import com.creditwise.entity.OfficerClientAssignment;
 import com.creditwise.entity.User;
 import com.creditwise.service.OfficerClientAssignmentService;
 import com.creditwise.service.UserService;
-import jakarta.validation.Valid;
+import com.creditwise.security.CustomUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,11 +29,8 @@ public class AdminController {
     private OfficerClientAssignmentService assignmentService;
 
     @PostMapping("/officers")
-    public ResponseEntity<ApiResponse<User>> createOfficer(@Valid @RequestBody RegisterClientRequest registerRequest) {
-        // In a real implementation, we would set the role to OFFICER
-        // For now, we'll use the existing client registration method but modify the role
-        User user = userService.createUser(registerRequest);
-        // We would need to modify the createUser method to accept a role parameter
+    public ResponseEntity<ApiResponse<User>> createOfficer(@RequestBody RegisterOfficerRequest registerRequest) {
+        User user = userService.createOfficer(registerRequest);
         return ResponseEntity.ok(ApiResponse.success(user, "Officer created successfully"));
     }
 

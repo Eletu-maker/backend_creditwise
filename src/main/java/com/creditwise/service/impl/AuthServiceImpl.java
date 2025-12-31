@@ -4,7 +4,11 @@ import com.creditwise.dto.JwtResponse;
 import com.creditwise.dto.LoginRequest;
 import com.creditwise.dto.RegisterClientRequest;
 import com.creditwise.dto.UserProfile;
+import com.creditwise.entity.ClientProfile;
+import com.creditwise.entity.OfficerProfile;
 import com.creditwise.entity.User;
+import com.creditwise.repository.ClientProfileRepository;
+import com.creditwise.repository.OfficerProfileRepository;
 import com.creditwise.repository.UserRepository;
 import com.creditwise.security.CustomUserDetails;
 import com.creditwise.security.JwtUtils;
@@ -35,11 +39,16 @@ public class AuthServiceImpl implements AuthService {
     private UserRepository userRepository;
 
     @Autowired
+    private ClientProfileRepository clientProfileRepository;
+
+    @Autowired
     private PasswordEncoder passwordEncoder;
     
     @Autowired
     private OtpAuthService otpAuthService;
-
+    
+    @Autowired
+    private OfficerProfileRepository officerProfileRepository;
     @Override
     public JwtResponse authenticateUser(LoginRequest loginRequest) {
         Authentication authentication = authenticationManager.authenticate(
@@ -47,10 +56,30 @@ public class AuthServiceImpl implements AuthService {
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
         
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        
+        // Check if the user is deleted
+        if (userDetails.getUser().getStatus() == User.Status.DELETED) {
+            throw new RuntimeException("Account has been deleted and cannot be accessed");
+        }
+        
+        // Update status to ACTIVE when user logs in (for both officers and clients)
+        if (userDetails.getUser().getStatus() != User.Status.ACTIVE) {
+            User user = userDetails.getUser();
+            user.setStatus(User.Status.ACTIVE);
+            userRepository.save(user);
+            
+            // Update officer profile status as well if it's an officer
+            if (user.getRole() == User.Role.OFFICER) {
+                OfficerProfile officerProfile = officerProfileRepository.findByUser(user)
+                        .orElseThrow(() -> new RuntimeException("Officer profile not found for user: " + user.getId()));
+                officerProfile.setStatus(User.Status.ACTIVE);
+                officerProfileRepository.save(officerProfile);
+            }
+        }
+
         String jwt = jwtUtils.generateJwtToken(authentication);
         String refreshToken = jwtUtils.generateRefreshToken(authentication);
-
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         
         UserProfile userProfile = new UserProfile();
         userProfile.setId(userDetails.getUserId().toString());
@@ -65,7 +94,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public JwtResponse registerClient(RegisterClientRequest registerRequest) {
-        User user = userService.createUser(registerRequest);
+        User user = userService.createClient(registerRequest);
         
         // Authenticate the user after registration
         Authentication authentication = authenticationManager.authenticate(
@@ -130,5 +159,33 @@ public class AuthServiceImpl implements AuthService {
         
         // Generate and send OTP
         return otpAuthService.generateAndSendOtp(email);
+    }
+    
+    @Override
+    public void logout(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+        
+        // Only update to INACTIVE if the user is currently ACTIVE
+        if (user.getStatus() == User.Status.ACTIVE) {
+            user.setStatus(User.Status.INACTIVE);
+            userRepository.save(user);
+            
+            // Update officer profile status as well if it's an officer
+            if (user.getRole() == User.Role.OFFICER) {
+                OfficerProfile officerProfile = officerProfileRepository.findByUser(user)
+                        .orElseThrow(() -> new RuntimeException("Officer profile not found for user: " + user.getId()));
+                officerProfile.setStatus(User.Status.INACTIVE);
+                officerProfileRepository.save(officerProfile);
+            }
+            
+            // Update client profile status as well if it's a client
+            if (user.getRole() == User.Role.CLIENT) {
+                ClientProfile clientProfile = clientProfileRepository.findByUser(user)
+                        .orElseThrow(() -> new RuntimeException("Client profile not found for user: " + user.getId()));
+                clientProfile.setStatus(User.Status.INACTIVE);
+                clientProfileRepository.save(clientProfile);
+            }
+        }
     }
 }

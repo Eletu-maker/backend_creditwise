@@ -57,4 +57,15 @@ public class AuthController {
         JwtResponse response = authService.authenticateAdminWithOtp(request.getEmail(), request.getOtpCode());
         return ResponseEntity.ok(ApiResponse.success(response, "Admin authenticated successfully with OTP"));
     }
+    
+    @PostMapping("/logout")
+    public ResponseEntity<ApiResponse<String>> logout() {
+        // Get the currently authenticated user's email
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() != null) {
+            String email = authentication.getName(); // Get email from authentication principal
+            authService.logout(email);
+        }
+        return ResponseEntity.ok(ApiResponse.success(null, "Logged out successfully"));
+    }
 }

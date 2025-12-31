@@ -98,7 +98,7 @@ class AuthServiceTest {
 
         Authentication authentication = mock(Authentication.class);
 
-        when(userService.createUser(registerRequest)).thenReturn(user);
+        when(userService.createClient(registerRequest)).thenReturn(user);
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenReturn(authentication);
         when(authentication.getPrincipal()).thenReturn(user);
@@ -116,7 +116,7 @@ class AuthServiceTest {
         assertNotNull(response.getUserProfile());
         assertEquals("john.doe@example.com", response.getUserProfile().getEmail());
         
-        verify(userService).createUser(registerRequest);
+        verify(userService).createClient(registerRequest);
         verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
         verify(jwtUtils).generateJwtToken(authentication);
         verify(jwtUtils).generateRefreshToken(authentication);

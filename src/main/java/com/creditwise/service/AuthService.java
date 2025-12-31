@@ -15,4 +15,7 @@ public interface AuthService {
     
     // Method to initiate OTP generation for admin login
     String initiateAdminOtpLogin(String email);
+    
+    // Method for logout functionality
+    void logout(String email);
 }

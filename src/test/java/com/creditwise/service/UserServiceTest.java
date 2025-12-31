@@ -35,7 +35,7 @@ class UserServiceTest {
     }
 
     @Test
-    void createUser_ShouldCreateUser_WhenValidRequest() {
+    void createClient_ShouldCreateUser_WhenValidRequest() {
         // Arrange
         RegisterClientRequest request = new RegisterClientRequest();
         request.setFirstName("John");
@@ -59,7 +59,7 @@ class UserServiceTest {
         when(userRepository.save(any(User.class))).thenReturn(user);
 
         // Act
-        User result = userService.createUser(request);
+        User result = userService.createClient(request);
 
         // Assert
         assertNotNull(result);
@@ -75,7 +75,7 @@ class UserServiceTest {
     }
 
     @Test
-    void createUser_ShouldThrowException_WhenEmailAlreadyExists() {
+    void createClient_ShouldThrowException_WhenEmailAlreadyExists() {
         // Arrange
         RegisterClientRequest request = new RegisterClientRequest();
         request.setEmail("john.doe@example.com");
@@ -84,7 +84,7 @@ class UserServiceTest {
 
         // Act & Assert
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            userService.createUser(request);
+            userService.createClient(request);
         });
 
         assertEquals("Email is already in use!", exception.getMessage());
