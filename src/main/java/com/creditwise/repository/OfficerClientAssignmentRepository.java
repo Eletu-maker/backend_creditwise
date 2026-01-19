@@ -23,12 +23,22 @@ public interface OfficerClientAssignmentRepository extends JpaRepository<Officer
     
     List<OfficerClientAssignment> findByOfficerIdAndAssignmentStatus(UUID officerId, OfficerClientAssignment.AssignmentStatus status);
     
-    @Query("SELECT oca FROM OfficerClientAssignment oca WHERE oca.officer.id = :officerId AND oca.client.id = :clientId")
-    Optional<OfficerClientAssignment> findByOfficerIdAndClientId(UUID officerId, UUID clientId);
+    @Query("SELECT oca FROM OfficerClientAssignment oca WHERE oca.officer.id = :officerId AND oca.client.id = :clientId ORDER BY oca.createdAt DESC")
+    List<OfficerClientAssignment> findByOfficerIdAndClientId(UUID officerId, UUID clientId);
+    
+    @Query("SELECT oca FROM OfficerClientAssignment oca WHERE oca.officer.id = :officerId AND oca.client.id = :clientId AND oca.assignmentStatus = :status ORDER BY oca.createdAt DESC")
+    List<OfficerClientAssignment> findByOfficerIdAndClientIdAndAssignmentStatus(UUID officerId, UUID clientId, OfficerClientAssignment.AssignmentStatus status);
     
     List<OfficerClientAssignment> findByClientId(UUID clientId);
     
     @Modifying
     @Query("UPDATE OfficerClientAssignment o SET o.assignmentStatus = :status WHERE o.id = :assignmentId")
     void updateAssignmentStatusById(UUID assignmentId, OfficerClientAssignment.AssignmentStatus status);
+    
+    // Custom queries with eager loading to avoid serialization issues
+    @Query("SELECT oca FROM OfficerClientAssignment oca JOIN FETCH oca.officer JOIN FETCH oca.client WHERE oca.assignmentStatus = :status")
+    List<OfficerClientAssignment> findByAssignmentStatusWithEagerFetch(OfficerClientAssignment.AssignmentStatus status);
+    
+    @Query("SELECT oca FROM OfficerClientAssignment oca JOIN FETCH oca.officer JOIN FETCH oca.client WHERE oca.id = :assignmentId")
+    Optional<OfficerClientAssignment> findByIdWithEagerFetch(UUID assignmentId);
 }

@@ -1,6 +1,7 @@
 package com.creditwise.controller;
 
 import com.creditwise.dto.ApiResponse;
+import com.creditwise.dto.OfficerClientAssignmentDto;
 import com.creditwise.dto.RegisterOfficerRequest;
 import com.creditwise.entity.OfficerClientAssignment;
 import com.creditwise.entity.User;
@@ -33,6 +34,18 @@ public class AdminController {
         User user = userService.createOfficer(registerRequest);
         return ResponseEntity.ok(ApiResponse.success(user, "Officer created successfully"));
     }
+    
+    @GetMapping("/officers")
+    public ResponseEntity<ApiResponse<List<User>>> getAllOfficers() {
+        List<User> officers = userService.getAllUsersByRole(User.Role.OFFICER);
+        return ResponseEntity.ok(ApiResponse.success(officers, "All officers retrieved successfully"));
+    }
+    
+    @GetMapping("/clients")
+    public ResponseEntity<ApiResponse<List<User>>> getAllClients() {
+        List<User> clients = userService.getAllUsersByRole(User.Role.CLIENT);
+        return ResponseEntity.ok(ApiResponse.success(clients, "All clients retrieved successfully"));
+    }
 
     @PostMapping("/assign-officer-to-client")
     public ResponseEntity<ApiResponse<OfficerClientAssignment>> assignOfficerToClient(
@@ -43,15 +56,15 @@ public class AdminController {
     }
 
     @GetMapping("/officer-client-assignments")
-    public ResponseEntity<ApiResponse<List<OfficerClientAssignment>>> getAllAssignments() {
-        List<OfficerClientAssignment> assignments = assignmentService.getAllActiveAssignments();
+    public ResponseEntity<ApiResponse<List<OfficerClientAssignmentDto>>> getAllAssignments() {
+        List<OfficerClientAssignmentDto> assignments = assignmentService.getAllActiveAssignments();
         return ResponseEntity.ok(ApiResponse.success(assignments, "All assignments retrieved successfully"));
     }
 
     @GetMapping("/officer-client-assignments/{assignmentId}")
-    public ResponseEntity<ApiResponse<OfficerClientAssignment>> getAssignmentById(@PathVariable UUID assignmentId) {
-        OfficerClientAssignment assignment = assignmentService.getAssignmentById(assignmentId);
-        return ResponseEntity.ok(ApiResponse.success(assignment, "Assignment retrieved successfully"));
+    public ResponseEntity<ApiResponse<OfficerClientAssignmentDto>> getAssignmentById(@PathVariable UUID assignmentId) {
+        OfficerClientAssignmentDto dto = assignmentService.getAssignmentById(assignmentId);
+        return ResponseEntity.ok(ApiResponse.success(dto, "Assignment retrieved successfully"));
     }
 
     @DeleteMapping("/officer-client-assignments/{assignmentId}")

@@ -1,5 +1,6 @@
 package com.creditwise.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -22,10 +23,12 @@ public class OfficerClientAssignment extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "officer_id", nullable = false)
+    @JsonBackReference
     private User officer;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "client_id", nullable = false)
+    @JsonBackReference
     private User client;
 
     @Enumerated(EnumType.STRING)

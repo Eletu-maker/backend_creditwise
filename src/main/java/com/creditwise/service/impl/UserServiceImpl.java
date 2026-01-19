@@ -16,6 +16,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -92,12 +93,16 @@ public class UserServiceImpl implements UserService {
                 .maxActiveClients(request.getMaxActiveClients())
                 .bio(request.getBio())
                 .specialization(request.getSpecialization())
-                .status(User.Status.INACTIVE) // Set to INACTIVE initially
                 .build();
         
         officerProfileRepository.save(officerProfile);
-
+        
         return savedUser;
+    }
+    
+    @Override
+    public List<User> getAllUsersByRole(User.Role role) {
+        return userRepository.findByRole(role);
     }
 
     @Override

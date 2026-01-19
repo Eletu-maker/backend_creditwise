@@ -1,5 +1,6 @@
 package com.creditwise.service.impl;
 
+import com.creditwise.dto.OfficerClientAssignmentDto;
 import com.creditwise.entity.OfficerClientAssignment;
 import com.creditwise.entity.User;
 import com.creditwise.exception.OfficerCapacityExceededException;
@@ -15,6 +16,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class OfficerClientAssignmentServiceImpl implements OfficerClientAssignmentService {
@@ -61,14 +63,18 @@ public class OfficerClientAssignmentServiceImpl implements OfficerClientAssignme
     }
 
     @Override
-    public List<OfficerClientAssignment> getAllActiveAssignments() {
-        return assignmentRepository.findByAssignmentStatus(OfficerClientAssignment.AssignmentStatus.ACTIVE);
+    public List<OfficerClientAssignmentDto> getAllActiveAssignments() {
+        List<OfficerClientAssignment> assignments = assignmentRepository.findByAssignmentStatusWithEagerFetch(OfficerClientAssignment.AssignmentStatus.ACTIVE);
+        return assignments.stream()
+                .map(OfficerClientAssignmentDto::fromEntity)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public OfficerClientAssignment getAssignmentById(UUID assignmentId) {
-        return assignmentRepository.findById(assignmentId)
+    public OfficerClientAssignmentDto getAssignmentById(UUID assignmentId) {
+        OfficerClientAssignment assignment = assignmentRepository.findByIdWithEagerFetch(assignmentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Assignment", "id", assignmentId));
+        return OfficerClientAssignmentDto.fromEntity(assignment);
     }
 
     @Override
@@ -88,8 +94,16 @@ public class OfficerClientAssignmentServiceImpl implements OfficerClientAssignme
     }
 
     @Override
-    public Optional<OfficerClientAssignment> findByOfficerIdAndClientId(UUID officerId, UUID clientId) {
+    public List<OfficerClientAssignment> findByOfficerIdAndClientId(UUID officerId, UUID clientId) {
         return assignmentRepository.findByOfficerIdAndClientId(officerId, clientId);
+    }
+    
+    @Override
+    public Optional<OfficerClientAssignment> findActiveAssignmentByOfficerIdAndClientId(UUID officerId, UUID clientId) {
+        List<OfficerClientAssignment> assignments = assignmentRepository.findByOfficerIdAndClientIdAndAssignmentStatus(
+            officerId, clientId, OfficerClientAssignment.AssignmentStatus.ACTIVE);
+        // Return the most recent active assignment
+        return assignments.isEmpty() ? Optional.empty() : Optional.of(assignments.get(0));
     }
     
     @Override

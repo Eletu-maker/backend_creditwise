@@ -1,0 +1,1 @@
+ALTER TABLE contents ADD COLUMN content_status VARCHAR(20) DEFAULT 'ACTIVE';

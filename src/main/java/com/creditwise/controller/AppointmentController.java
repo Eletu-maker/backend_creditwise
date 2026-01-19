@@ -49,10 +49,10 @@ public class AppointmentController {
             // If the current user is a client, they can only book appointments for themselves
             actualClientId = currentUserId;
             
-            // Check if the officer is assigned to this client
-            Optional<OfficerClientAssignment> assignment = officerClientAssignmentService
-                    .findByOfficerIdAndClientId(officerId, actualClientId);
-            if (assignment.isEmpty() || assignment.get().getAssignmentStatus() != OfficerClientAssignment.AssignmentStatus.ACTIVE) {
+            // Check if the officer has an active assignment to this client
+            Optional<OfficerClientAssignment> activeAssignmentOpt = officerClientAssignmentService
+                    .findActiveAssignmentByOfficerIdAndClientId(officerId, actualClientId);
+            if (activeAssignmentOpt.isEmpty() || activeAssignmentOpt.get().getAssignmentStatus() != OfficerClientAssignment.AssignmentStatus.ACTIVE) {
                 return ResponseEntity.status(403).build();
             }
         } else if ("ROLE_OFFICER".equals(currentUserRole)) {

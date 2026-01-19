@@ -3,6 +3,7 @@ package com.creditwise.controller;
 import com.creditwise.dto.ApiResponse;
 import com.creditwise.dto.ContentDto;
 import com.creditwise.entity.Content;
+import com.creditwise.security.CustomUserDetails;
 import com.creditwise.service.ContentService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,6 +12,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
@@ -25,7 +27,14 @@ public class ContentController {
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<Content>> createContent(@Valid @RequestBody ContentDto contentDto) {
+    public ResponseEntity<ApiResponse<Content>> createContent(@Valid @RequestBody ContentDto contentDto, Authentication authentication) {
+        // Extract admin user ID from the security context
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        UUID adminId = userDetails.getUserId();
+        
+        // Set the creator ID automatically
+        contentDto.setCreatorId(adminId.toString());
+        
         Content content = contentService.createContent(contentDto);
         return ResponseEntity.ok(ApiResponse.success(content, "Content created successfully"));
     }
@@ -52,7 +61,8 @@ public class ContentController {
         } else if (contentType != null) {
             contents = contentService.getContentsByContentType(contentType, pageable);
         } else {
-            contents = contentService.getContentsByCategory("GENERAL_EDUCATION", pageable);
+            // If neither category nor contentType is specified, get all content except deleted
+            contents = contentService.getContentsByContentType(null, pageable);
         }
         
         return ResponseEntity.ok(ApiResponse.success(contents, "Contents retrieved successfully"));
@@ -60,7 +70,14 @@ public class ContentController {
 
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<Content>> updateContent(@PathVariable UUID id, @Valid @RequestBody ContentDto contentDto) {
+    public ResponseEntity<ApiResponse<Content>> updateContent(@PathVariable UUID id, @Valid @RequestBody ContentDto contentDto, Authentication authentication) {
+        // Extract admin user ID from the security context
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        UUID adminId = userDetails.getUserId();
+        
+        // Set the creator ID automatically
+        contentDto.setCreatorId(adminId.toString());
+        
         Content content = contentService.updateContent(id, contentDto);
         return ResponseEntity.ok(ApiResponse.success(content, "Content updated successfully"));
     }

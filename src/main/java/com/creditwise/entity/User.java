@@ -1,5 +1,6 @@
 package com.creditwise.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -12,8 +13,9 @@ import lombok.AllArgsConstructor;
 
 @Entity
 @Table(name = "users", indexes = {
-    @Index(name = "idx_user_email", columnList = "email"),
-    @Index(name = "idx_user_role", columnList = "role")
+        @Index(name = "idx_user_email", columnList = "email"),
+        @Index(name = "idx_user_role", columnList = "role"),
+        @Index(name = "idx_user_status", columnList = "status")
 })
 @Getter
 @Setter

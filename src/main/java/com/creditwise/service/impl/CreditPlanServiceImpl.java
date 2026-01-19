@@ -71,6 +71,20 @@ public class CreditPlanServiceImpl implements CreditPlanService {
         CreditPlan plan = creditPlanRepository.findById(planId)
                 .orElseThrow(() -> new ResourceNotFoundException("Credit plan", "id", planId));
 
+        // Update client if provided and changed
+        if (creditPlanDto.getClientId() != null && !creditPlanDto.getClientId().equals(plan.getClient().getId().toString())) {
+            User client = userRepository.findById(UUID.fromString(creditPlanDto.getClientId()))
+                    .orElseThrow(() -> new ResourceNotFoundException("Client", "id", creditPlanDto.getClientId()));
+            plan.setClient(client);
+        }
+
+        // Update officer if provided and changed (though typically this shouldn't change)
+        if (creditPlanDto.getOfficerId() != null && !creditPlanDto.getOfficerId().equals(plan.getOfficer().getId().toString())) {
+            User officer = userRepository.findById(UUID.fromString(creditPlanDto.getOfficerId()))
+                    .orElseThrow(() -> new ResourceNotFoundException("Officer", "id", creditPlanDto.getOfficerId()));
+            plan.setOfficer(officer);
+        }
+
         plan.setTitle(creditPlanDto.getTitle());
         plan.setDescription(creditPlanDto.getDescription());
         
