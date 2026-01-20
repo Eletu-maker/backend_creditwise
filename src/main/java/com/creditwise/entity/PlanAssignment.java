@@ -1,5 +1,7 @@
 package com.creditwise.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -20,6 +22,7 @@ import java.util.UUID;
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class PlanAssignment extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -44,6 +47,7 @@ public class PlanAssignment extends BaseEntity {
     public enum AssignmentStatus {
         PENDING,
         IN_PROGRESS,
-        COMPLETED
+        COMPLETED,
+        ENDED
     }
 }

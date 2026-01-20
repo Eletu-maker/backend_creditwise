@@ -129,6 +129,12 @@ public class PlanServiceImpl implements PlanService {
     }
 
     @Override
+    public PlanAssignment getPlanAssignmentById(UUID assignmentId) {
+        return planAssignmentRepository.findById(assignmentId)
+                .orElseThrow(() -> new ResourceNotFoundException("PlanAssignment", "id", assignmentId));
+    }
+    
+    @Override
     public PlanAssignment updateAssignmentStatus(UUID assignmentId, PlanAssignment.AssignmentStatus status) {
         PlanAssignment assignment = planAssignmentRepository.findById(assignmentId)
                 .orElseThrow(() -> new ResourceNotFoundException("PlanAssignment", "id", assignmentId));
@@ -168,4 +174,16 @@ public class PlanServiceImpl implements PlanService {
             clientId, PlanAssignment.AssignmentStatus.COMPLETED);
         return activeAssignment.isPresent();
     }
+    
+    @Override
+    public boolean hasActiveAssignmentWithDifferentOfficer(UUID clientId, UUID officerId) {
+        // Find the most recent assignment that is not completed
+        Optional<PlanAssignment> activeAssignment = planAssignmentRepository.findTopByClientIdAndAssignmentStatusNotOrderByCreatedAtDesc(
+            clientId, PlanAssignment.AssignmentStatus.COMPLETED);
+        
+        // Return true if there's an active assignment with a different officer
+        return activeAssignment.isPresent() && 
+               !activeAssignment.get().getOfficer().getId().equals(officerId);
+    }
+    
 }

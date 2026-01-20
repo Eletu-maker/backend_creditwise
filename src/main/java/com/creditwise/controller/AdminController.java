@@ -4,8 +4,10 @@ import com.creditwise.dto.ApiResponse;
 import com.creditwise.dto.OfficerClientAssignmentDto;
 import com.creditwise.dto.RegisterOfficerRequest;
 import com.creditwise.entity.OfficerClientAssignment;
+import com.creditwise.entity.PlanAssignment;
 import com.creditwise.entity.User;
 import com.creditwise.service.OfficerClientAssignmentService;
+import com.creditwise.service.PlanService;
 import com.creditwise.service.UserService;
 import com.creditwise.security.CustomUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +30,9 @@ public class AdminController {
 
     @Autowired
     private OfficerClientAssignmentService assignmentService;
+    
+    @Autowired
+    private PlanService planService;
 
     @PostMapping("/officers")
     public ResponseEntity<ApiResponse<User>> createOfficer(@RequestBody RegisterOfficerRequest registerRequest) {
@@ -71,6 +76,14 @@ public class AdminController {
     public ResponseEntity<ApiResponse<String>> removeAssignment(@PathVariable UUID assignmentId) {
         assignmentService.endAssignment(assignmentId);
         return ResponseEntity.ok(ApiResponse.success("Assignment removed successfully", "Assignment removed successfully"));
+    }
+    
+    @PostMapping("/end-plan-assignment/{planAssignmentId}")
+    public ResponseEntity<ApiResponse<String>> endPlanAssignment(@PathVariable UUID planAssignmentId) {
+        // Update the assignment status to COMPLETED
+        planService.updateAssignmentStatus(planAssignmentId, PlanAssignment.AssignmentStatus.COMPLETED);
+        
+        return ResponseEntity.ok(ApiResponse.success("Plan assignment ended successfully", "Plan assignment ended successfully"));
     }
 
     @GetMapping("/stats")

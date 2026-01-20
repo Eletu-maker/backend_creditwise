@@ -130,12 +130,7 @@ public class OfficerController {
     
 
 
-    @PostMapping("/end-assignment/{assignmentId}")
-    public ResponseEntity<ApiResponse<String>> endAssignment(@PathVariable UUID assignmentId) {
-        assignmentService.endAssignment(assignmentId);
-        return ResponseEntity.ok(ApiResponse.success("Assignment ended successfully", "Assignment ended successfully"));
-    }
-    
+
     @PostMapping("/plans")
     public ResponseEntity<ApiResponse<Plan>> createPlan(@RequestBody PlanDto planDto, Authentication authentication) {
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
@@ -154,9 +149,9 @@ public class OfficerController {
                 return ResponseEntity.status(403).build();
             }
             
-            // Check if the client already has an active assignment
-            if (planService.hasActiveAssignment(clientId)) {
-                return ResponseEntity.status(400).body(ApiResponse.error("Client already has an active plan assignment. Cannot assign a new plan until current one is completed."));
+            // Check if the client already has an active assignment with a different officer
+            if (planService.hasActiveAssignmentWithDifferentOfficer(clientId, officerId)) {
+                return ResponseEntity.status(400).body(ApiResponse.error("Client already has an active plan assignment with a different officer. Cannot assign a new plan until current one is completed."));
             }
             
             // Assign the newly created plan to the client
@@ -180,25 +175,26 @@ public class OfficerController {
     }
     
     @PostMapping("/assign-plan")
-    public ResponseEntity<ApiResponse<PlanAssignment>> assignPlanToClient(@RequestBody PlanAssignmentDto assignmentDto, Authentication authentication) {
+    public ResponseEntity<ApiResponse<PlanAssignmentDto>> assignPlanToClient(@RequestBody PlanAssignmentDto requestDto, Authentication authentication) {
         // Extract officer ID from the security context
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         UUID officerId = userDetails.getUserId();
         
         // Check if the officer has an active assignment to this client
-        Optional<OfficerClientAssignment> activeAssignmentOpt = assignmentService.findActiveAssignmentByOfficerIdAndClientId(officerId, assignmentDto.getClientId());
+        Optional<OfficerClientAssignment> activeAssignmentOpt = assignmentService.findActiveAssignmentByOfficerIdAndClientId(officerId, requestDto.getClientId());
         if (activeAssignmentOpt.isEmpty()) {
             return ResponseEntity.status(403).build();
         }
         
-        // Check if the client already has an active assignment
-        if (planService.hasActiveAssignment(assignmentDto.getClientId())) {
-            return ResponseEntity.status(400).body(ApiResponse.error("Client already has an active plan assignment. Cannot assign a new plan until current one is completed."));
+        // Check if the client already has an active assignment with a different officer
+        if (planService.hasActiveAssignmentWithDifferentOfficer(requestDto.getClientId(), officerId)) {
+            return ResponseEntity.status(400).body(ApiResponse.error("Client already has an active plan assignment with a different officer. Cannot assign a new plan until current one is completed."));
         }
         
-        PlanAssignment planAssignment = planService.assignPlanToClient(assignmentDto.getPlanId(), assignmentDto.getClientId(), officerId);
+        PlanAssignment planAssignment = planService.assignPlanToClient(requestDto.getPlanId(), requestDto.getClientId(), officerId);
+        PlanAssignmentDto responseDto = PlanAssignmentDto.fromEntity(planAssignment);
         
-        return ResponseEntity.ok(ApiResponse.success(planAssignment, "Plan assigned to client successfully"));
+        return ResponseEntity.ok(ApiResponse.success(responseDto, "Plan assigned to client successfully"));
     }
     
     @GetMapping("/client-plans/{clientId}")
@@ -216,5 +212,42 @@ public class OfficerController {
         List<PlanAssignment> planAssignments = planService.getAssignmentsByClientId(clientId);
         
         return ResponseEntity.ok(ApiResponse.success(planAssignments, "Client plan assignments retrieved successfully"));
+    }
+    
+    @PostMapping("/end-plan-assignment/{planAssignmentId}")
+    public ResponseEntity<ApiResponse<String>> endPlanAssignment(
+            @PathVariable UUID planAssignmentId, 
+            @RequestParam(defaultValue = "COMPLETED") String status,
+            Authentication authentication) {
+        // Extract officer ID from the security context
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        UUID officerId = userDetails.getUserId();
+        
+        // Get the plan assignment
+        PlanAssignment planAssignment = planService.getPlanAssignmentById(planAssignmentId);
+        
+        // Check if the officer is the one who created this assignment
+        if (!planAssignment.getOfficer().getId().equals(officerId)) {
+            return ResponseEntity.status(403).build();
+        }
+        
+        // Validate the status parameter
+        PlanAssignment.AssignmentStatus assignmentStatus;
+        try {
+            assignmentStatus = PlanAssignment.AssignmentStatus.valueOf(status.toUpperCase());
+            // Only allow ENDED or COMPLETED
+            if (assignmentStatus != PlanAssignment.AssignmentStatus.ENDED && 
+                assignmentStatus != PlanAssignment.AssignmentStatus.COMPLETED) {
+                return ResponseEntity.badRequest().body(ApiResponse.error("Invalid status. Only ENDED or COMPLETED are allowed."));
+            }
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(ApiResponse.error("Invalid status value. Use ENDED or COMPLETED."));
+        }
+        
+        // Update the assignment status
+        planService.updateAssignmentStatus(planAssignmentId, assignmentStatus);
+        
+        String message = "Plan assignment " + status.toLowerCase() + " successfully";
+        return ResponseEntity.ok(ApiResponse.success(message, message));
     }
 }

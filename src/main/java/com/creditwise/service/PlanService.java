@@ -18,7 +18,9 @@ public interface PlanService {
     PlanAssignment assignPlanToClient(UUID planId, UUID clientId, UUID officerId);
     List<PlanAssignment> getAssignmentsByClientId(UUID clientId);
     List<PlanAssignment> getAssignmentsByOfficerId(UUID officerId);
+    PlanAssignment getPlanAssignmentById(UUID assignmentId);
     PlanAssignment updateAssignmentStatus(UUID assignmentId, PlanAssignment.AssignmentStatus status);
     PlanAssignment updateAssignmentProgress(UUID assignmentId, Integer progressPercentage);
     boolean hasActiveAssignment(UUID clientId);
+    boolean hasActiveAssignmentWithDifferentOfficer(UUID clientId, UUID officerId);
 }
