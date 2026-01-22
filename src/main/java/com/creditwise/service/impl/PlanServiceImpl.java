@@ -1,9 +1,11 @@
 package com.creditwise.service.impl;
 
+import com.creditwise.entity.CreditPlan;
 import com.creditwise.entity.Plan;
 import com.creditwise.entity.PlanAssignment;
 import com.creditwise.entity.User;
 import com.creditwise.exception.ResourceNotFoundException;
+import com.creditwise.repository.CreditPlanRepository;
 import com.creditwise.repository.PlanAssignmentRepository;
 import com.creditwise.repository.PlanRepository;
 import com.creditwise.repository.UserRepository;
@@ -26,6 +28,9 @@ public class PlanServiceImpl implements PlanService {
 
     @Autowired
     private UserRepository userRepository;
+    
+    @Autowired
+    private CreditPlanRepository creditPlanRepository;
 
     @Override
     public Plan createPlan(String title, String description, Integer durationInDays) {
@@ -114,8 +119,21 @@ public class PlanServiceImpl implements PlanService {
                 .assignmentStatus(PlanAssignment.AssignmentStatus.PENDING)
                 .progressPercentage(0)
                 .build();
-
-        return planAssignmentRepository.save(planAssignment);
+        
+        PlanAssignment savedAssignment = planAssignmentRepository.save(planAssignment);
+        
+        // Also create a corresponding CreditPlan entry so the client can see it
+        CreditPlan creditPlan = CreditPlan.builder()
+                .client(client)
+                .officer(officer)
+                .title(plan.getTitle())
+                .description(plan.getDescription())
+                .planStatus(CreditPlan.PlanStatus.ACTIVE)
+                .build();
+        
+        creditPlanRepository.save(creditPlan);
+        
+        return savedAssignment;
     }
 
     @Override
@@ -144,7 +162,28 @@ public class PlanServiceImpl implements PlanService {
             assignment.setProgressPercentage(100);
         }
 
-        return planAssignmentRepository.save(assignment);
+        PlanAssignment savedAssignment = planAssignmentRepository.save(assignment);
+        
+        // Update the corresponding CreditPlan status
+        updateCorrespondingCreditPlan(assignment, status);
+        
+        return savedAssignment;
+    }
+    
+    private void updateCorrespondingCreditPlan(PlanAssignment assignment, PlanAssignment.AssignmentStatus status) {
+        // Find the corresponding CreditPlan based on client and plan title/description
+        // Since we created the CreditPlan with the same title as the Plan, we can match them
+        List<CreditPlan> creditPlans = creditPlanRepository.findByClientAndTitle(
+                assignment.getClient(), assignment.getPlan().getTitle());
+        
+        for (CreditPlan creditPlan : creditPlans) {
+            if (status == PlanAssignment.AssignmentStatus.COMPLETED) {
+                creditPlan.setPlanStatus(CreditPlan.PlanStatus.COMPLETED);
+            } else if (status == PlanAssignment.AssignmentStatus.ENDED) {
+                creditPlan.setPlanStatus(CreditPlan.PlanStatus.ARCHIVED); // or COMPLETED depending on your business logic
+            }
+            creditPlanRepository.save(creditPlan);
+        }
     }
 
     @Override
@@ -165,7 +204,12 @@ public class PlanServiceImpl implements PlanService {
             }
         }
 
-        return planAssignmentRepository.save(assignment);
+        PlanAssignment savedAssignment = planAssignmentRepository.save(assignment);
+        
+        // Update the corresponding CreditPlan status
+        updateCorrespondingCreditPlan(assignment, assignment.getAssignmentStatus());
+        
+        return savedAssignment;
     }
 
     @Override

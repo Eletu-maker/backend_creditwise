@@ -37,7 +37,7 @@ public class CreditPlanServiceImpl implements CreditPlanService {
                 .officer(officer)
                 .title(creditPlanDto.getTitle())
                 .description(creditPlanDto.getDescription())
-                .planStatus(CreditPlan.PlanStatus.valueOf(creditPlanDto.getPlanStatus()))
+                .planStatus(creditPlanDto.getPlanStatus())
                 .build();
 
         return creditPlanRepository.save(plan);
@@ -89,7 +89,7 @@ public class CreditPlanServiceImpl implements CreditPlanService {
         plan.setDescription(creditPlanDto.getDescription());
         
         if (creditPlanDto.getPlanStatus() != null) {
-            plan.setPlanStatus(CreditPlan.PlanStatus.valueOf(creditPlanDto.getPlanStatus()));
+            plan.setPlanStatus(creditPlanDto.getPlanStatus());
         }
 
         return creditPlanRepository.save(plan);

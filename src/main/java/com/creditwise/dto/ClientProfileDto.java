@@ -15,6 +15,9 @@ public class ClientProfileDto {
     private String email;
     private String phoneNumber;
     private String address;
+    private String city;
+    private String state;
+    private String zipCode;
     private Integer creditScore;
     private ClientProfile.PlanStatus planStatus;
     private LocalDateTime createdAt;
@@ -32,6 +35,9 @@ public class ClientProfileDto {
         dto.setEmail(profile.getEmail());
         dto.setPhoneNumber(profile.getPhoneNumber());
         dto.setAddress(profile.getAddress());
+        dto.setCity(profile.getCity());
+        dto.setState(profile.getState());
+        dto.setZipCode(profile.getZipCode());
         dto.setCreditScore(profile.getCreditScore());
         dto.setPlanStatus(profile.getPlanStatus());
         dto.setCreatedAt(profile.getCreatedAt());

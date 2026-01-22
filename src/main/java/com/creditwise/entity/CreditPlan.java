@@ -1,5 +1,6 @@
 package com.creditwise.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -17,6 +18,7 @@ import lombok.AllArgsConstructor;
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class CreditPlan extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)

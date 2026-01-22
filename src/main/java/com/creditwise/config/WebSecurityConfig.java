@@ -58,7 +58,7 @@ public class WebSecurityConfig {
                                 .requestMatchers("/h2-console/**").permitAll()
                                 .anyRequest().authenticated()
                 )
-                .headers(headers -> headers.frameOptions().disable()); // Allow frames for H2 console
+                .headers(headers -> headers.frameOptions(frameOptions -> frameOptions.disable())); // Allow frames for H2 console
 
         http.authenticationProvider(authenticationProvider());
         http.addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class);

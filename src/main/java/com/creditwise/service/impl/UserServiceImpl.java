@@ -33,6 +33,31 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+    
+    private String buildFullAddress(RegisterClientRequest request) {
+        StringBuilder addressBuilder = new StringBuilder();
+        
+        if (request.getAddress() != null && !request.getAddress().trim().isEmpty()) {
+            addressBuilder.append(request.getAddress()).append(", ");
+        }
+        if (request.getCity() != null && !request.getCity().trim().isEmpty()) {
+            addressBuilder.append(request.getCity()).append(", ");
+        }
+        if (request.getState() != null && !request.getState().trim().isEmpty()) {
+            addressBuilder.append(request.getState()).append(", ");
+        }
+        if (request.getZipCode() != null && !request.getZipCode().trim().isEmpty()) {
+            addressBuilder.append(request.getZipCode());
+        }
+        
+        // Remove trailing comma and space if present
+        String fullAddress = addressBuilder.toString();
+        if (fullAddress.endsWith(", ")) {
+            fullAddress = fullAddress.substring(0, fullAddress.length() - 2);
+        }
+        
+        return fullAddress.isEmpty() ? null : fullAddress;
+    }
 
     @Override
     @Transactional
@@ -60,6 +85,10 @@ public class UserServiceImpl implements UserService {
                 .lastName(request.getLastName())
                 .email(request.getEmail())
                 .phoneNumber(request.getPhone())
+                .address(buildFullAddress(request)) // Build full address from individual fields
+                .city(request.getCity())
+                .state(request.getState())
+                .zipCode(request.getZipCode())
                 .planStatus(ClientProfile.PlanStatus.PENDING) // Set default plan status
                 .build();
         

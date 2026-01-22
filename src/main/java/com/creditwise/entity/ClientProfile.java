@@ -36,6 +36,15 @@ public class ClientProfile extends BaseEntity {
     @Column(name = "address")
     private String address;
 
+    @Column(name = "city")
+    private String city;
+
+    @Column(name = "state")
+    private String state;
+
+    @Column(name = "zip_code")
+    private String zipCode;
+
     @Column(name = "credit_score")
     private Integer creditScore;
 

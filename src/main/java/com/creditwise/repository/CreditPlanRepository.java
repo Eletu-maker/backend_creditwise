@@ -13,4 +13,5 @@ public interface CreditPlanRepository extends JpaRepository<CreditPlan, UUID> {
     List<CreditPlan> findByClient(User client);
     List<CreditPlan> findByOfficer(User officer);
     List<CreditPlan> findByClientAndPlanStatus(User client, CreditPlan.PlanStatus status);
+    List<CreditPlan> findByClientAndTitle(User client, String title);
 }

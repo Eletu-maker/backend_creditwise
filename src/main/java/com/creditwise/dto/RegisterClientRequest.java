@@ -28,4 +28,12 @@ public class RegisterClientRequest {
     @NotBlank(message = "Phone is required")
     @Size(max = 20, message = "Phone must be at most 20 characters")
     private String phone;
+    
+    private String address;
+    
+    private String city;
+    
+    private String state;
+    
+    private String zipCode;
 }

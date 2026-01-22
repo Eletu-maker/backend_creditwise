@@ -2,6 +2,7 @@ package com.creditwise.controller;
 
 import com.creditwise.dto.ApiResponse;
 import com.creditwise.dto.ClientProfileDto;
+import com.creditwise.dto.CreditPlanDto;
 import com.creditwise.entity.CreditHealthScore;
 import com.creditwise.entity.CreditPlan;
 import com.creditwise.entity.User;
@@ -10,6 +11,7 @@ import com.creditwise.service.CreditPlanService;
 import com.creditwise.service.UserService;
 import com.creditwise.entity.ClientProfile;
 import com.creditwise.repository.ClientProfileRepository;
+import com.creditwise.repository.UserRepository;
 import com.creditwise.security.CustomUserDetails;
 import com.creditwise.exception.ResourceNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +40,9 @@ public class ClientController {
 
     @Autowired
     private ClientProfileRepository clientProfileRepository;
+    
+    @Autowired
+    private UserRepository userRepository;
 
     @GetMapping("/profile")
     public ResponseEntity<ApiResponse<com.creditwise.dto.UserProfile>> getClientProfile(Authentication authentication) {
@@ -50,15 +55,32 @@ public class ClientController {
 
     @PutMapping("/profile")
     public ResponseEntity<ApiResponse<com.creditwise.dto.UserProfile>> updateClientProfile(@RequestBody ClientProfileDto updatedProfile, Authentication authentication) {
-        // For now, just return a success response
-        // Actual implementation would update the client profile
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         UUID userId = userDetails.getUserId();
         
+        // Find the client profile
+        ClientProfile clientProfile = clientProfileRepository.findByUserId(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("ClientProfile", "userId", userId));
+        
+        // Update only the allowed profile fields from the DTO
+        if (updatedProfile.getPhoneNumber() != null) {
+            clientProfile.setPhoneNumber(updatedProfile.getPhoneNumber());
+        }
+        if (updatedProfile.getAddress() != null) {
+            clientProfile.setAddress(updatedProfile.getAddress());
+        }
+        if (updatedProfile.getCity() != null) {
+            clientProfile.setCity(updatedProfile.getCity());
+        }
+        
+        // Save the updated profile
+        clientProfile = clientProfileRepository.save(clientProfile);
+        
+        // Return the updated profile
         com.creditwise.dto.UserProfile profile = userService.getUserProfile(userId);
-        return ResponseEntity.ok(ApiResponse.success(profile));
+        return ResponseEntity.ok(ApiResponse.success(profile, "Profile updated successfully"));
     }
-
+    
     @GetMapping("/credit-score")
     public ResponseEntity<ApiResponse<CreditHealthScore>> getCreditScore(Authentication authentication) {
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
@@ -69,16 +91,19 @@ public class ClientController {
     }
 
     @GetMapping("/credit-plans")
-    public ResponseEntity<ApiResponse<List<CreditPlan>>> getCreditPlans(Authentication authentication) {
+    public ResponseEntity<ApiResponse<List<CreditPlanDto>>> getCreditPlans(Authentication authentication) {
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         UUID userId = userDetails.getUserId();
         
         List<CreditPlan> plans = creditPlanService.getPlansByClient(userId);
-        return ResponseEntity.ok(ApiResponse.success(plans));
+        List<CreditPlanDto> planDtos = plans.stream()
+                .map(CreditPlanDto::fromEntity)
+                .toList();
+        return ResponseEntity.ok(ApiResponse.success(planDtos));
     }
 
     @GetMapping("/credit-plans/{planId}")
-    public ResponseEntity<ApiResponse<CreditPlan>> getCreditPlanById(@PathVariable UUID planId, Authentication authentication) {
+    public ResponseEntity<ApiResponse<CreditPlanDto>> getCreditPlanById(@PathVariable UUID planId, Authentication authentication) {
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         UUID userId = userDetails.getUserId();
         
@@ -89,7 +114,8 @@ public class ClientController {
             return ResponseEntity.status(403).build();
         }
         
-        return ResponseEntity.ok(ApiResponse.success(plan));
+        CreditPlanDto planDto = CreditPlanDto.fromEntity(plan);
+        return ResponseEntity.ok(ApiResponse.success(planDto));
     }
 
     @GetMapping("/credit-plans/{planId}/tasks")

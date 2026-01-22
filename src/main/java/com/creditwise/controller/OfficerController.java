@@ -198,7 +198,7 @@ public class OfficerController {
     }
     
     @GetMapping("/client-plans/{clientId}")
-    public ResponseEntity<ApiResponse<List<PlanAssignment>>> getClientPlans(@PathVariable UUID clientId, Authentication authentication) {
+    public ResponseEntity<ApiResponse<List<PlanAssignmentDto>>> getClientPlans(@PathVariable UUID clientId, Authentication authentication) {
         // Extract officer ID from the security context
         CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
         UUID officerId = userDetails.getUserId();
@@ -210,8 +210,11 @@ public class OfficerController {
         }
         
         List<PlanAssignment> planAssignments = planService.getAssignmentsByClientId(clientId);
+        List<PlanAssignmentDto> planAssignmentDtos = planAssignments.stream()
+                .map(PlanAssignmentDto::fromEntity)
+                .toList();
         
-        return ResponseEntity.ok(ApiResponse.success(planAssignments, "Client plan assignments retrieved successfully"));
+        return ResponseEntity.ok(ApiResponse.success(planAssignmentDtos, "Client plan assignments retrieved successfully"));
     }
     
     @PostMapping("/end-plan-assignment/{planAssignmentId}")
