@@ -1,43 +1,85 @@
-# Environment specific files
-.env
-.env.local
-.env.development
-.env.production
+# ============================================
+# SENSITIVE FILES - NEVER COMMIT THESE
+# ============================================
 
-# IDE files
+# Environment files with credentials
+.env
+.env.*
+!.env.example
+
+# Application configuration with secrets
+src/main/resources/application-dev.yml
+src/main/resources/application-prod.yml
+!src/main/resources/application-dev.yml.example
+!src/main/resources/application-prod.yml.example
+!src/main/resources/application.properties
+
+# Docker compose with credentials
+docker-compose.yml
+!docker-compose.yml.example
+
+# Personal Postman collections
+*postman_collection.json
+!*postman_collection.example.json
+
+# ============================================
+# IDE FILES
+# ============================================
 .vscode/
 .idea/
 *.swp
 *.swo
 *~
+*.iml
+.project
+.classpath
+.settings/
 
-# Compiled files
+# ============================================
+# BUILD & COMPILED FILES
+# ============================================
 *.class
 *.jar
 *.war
 *.ear
-
-# Maven
 target/
 !.mvn/wrapper/maven-wrapper.jar
 .mvn/
+build/
+out/
 
-# Logs
+# ============================================
+# LOGS
+# ============================================
 logs/
 *.log
+*.log.*
 
-# OS generated files
+# ============================================
+# OS GENERATED FILES
+# ============================================
 .DS_Store
 Thumbs.db
 desktop.ini
+*.tmp
 
-# Database
+# ============================================
+# DATABASE FILES
+# ============================================
 *.db
 *.db-journal
+*.sqlite
+*.sqlite3
 
-# Secrets
-**/application-*.yml
-**/application-*.properties
-!src/main/resources/application-dev.yml
-!src/main/resources/application-prod.yml
-!src/main/resources/application.properties
+# ============================================
+# DOCUMENTATION (if contains sensitive info)
+# ============================================
+# Uncomment if your docs contain personal info
+# *QUICK_START.md
+# *TESTING_GUIDE.md
+# *SETUP_GUIDE.md
+
+
+# Ignore sensitive config files
+src/main/resources/application-*.yml
+docker-compose.yml

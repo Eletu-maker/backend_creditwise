@@ -1,4 +1,8 @@
-# Development Environment Configuration
+# ============================================
+# DEVELOPMENT ENVIRONMENT CONFIGURATION TEMPLATE
+# ============================================
+# Copy this file to application-dev.yml and fill in your values
+# NEVER commit application-dev.yml with real credentials!
 
 # Server Configuration
 server:
@@ -11,8 +15,8 @@ spring:
   datasource:
     url: ${DB_URL:jdbc:h2:mem:testdb}
     driver-class-name: org.h2.Driver
-    username: ${DB_USERNAME:magic}
-    password: ${DB_PASSWORD:magic123}
+    username: ${DB_USERNAME:your_username}
+    password: ${DB_PASSWORD:your_password}
   
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
@@ -35,19 +39,20 @@ spring:
   # Mail Configuration
   mail:
     host: smtp.gmail.com
-    port: 465
-    username: ${EMAIL_USERNAME:usmaneletu2@gmail.com}
-    password: ${EMAIL_PASSWORD:your_app_password_here}  # Use app password for Gmail
+    port: 587
+    username: ${EMAIL_USERNAME:your_email@gmail.com}
+    password: ${EMAIL_PASSWORD:your_app_password}
     properties:
       mail:
         smtp:
           auth: true
-          ssl:
+          starttls:
             enable: true
-          socketFactory:
-            port: 465
-            class: javax.net.ssl.SSLSocketFactory
-            fallback: false
+            required: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+        debug: true
 
 # Logging Configuration
 logging:
@@ -58,7 +63,7 @@ logging:
 
 # JWT Configuration
 jwt:
-  secret: ${JWT_SECRET:mySecretKeyForDevelopmentOnlyDoNotUseInProduction}
+  secret: ${JWT_SECRET:your_jwt_secret_key_at_least_32_characters}
   expiration: 86400000
   refresh-expiration: 604800000
 
@@ -66,3 +71,5 @@ jwt:
 app:
   otp:
     expiry-minutes: 5
+  admin:
+    email: ${ADMIN_EMAIL:admin@creditwise.com}

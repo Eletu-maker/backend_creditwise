@@ -1,4 +1,8 @@
-# Production Environment Configuration
+# ============================================
+# PRODUCTION ENVIRONMENT CONFIGURATION TEMPLATE
+# ============================================
+# Copy this file to application-prod.yml and fill in your values
+# NEVER commit application-prod.yml with real credentials!
 
 # Server Configuration
 server:
@@ -11,8 +15,8 @@ spring:
   datasource:
     url: ${DB_URL:jdbc:mysql://localhost:3306/creditwise}
     driver-class-name: com.mysql.cj.jdbc.Driver
-    username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:password}
+    username: ${DB_USERNAME:your_db_username}
+    password: ${DB_PASSWORD:your_db_password}
     hikari:
       connection-timeout: 20000
       maximum-pool-size: 10
@@ -30,9 +34,26 @@ spring:
   flyway:
     enabled: true
     url: ${DB_URL:jdbc:mysql://localhost:3306/creditwise}
-    user: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:password}
+    user: ${DB_USERNAME:your_db_username}
+    password: ${DB_PASSWORD:your_db_password}
     
+  # Mail Configuration
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: ${EMAIL_USERNAME:your_email@gmail.com}
+    password: ${EMAIL_PASSWORD:your_app_password}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
 # Logging Configuration
 logging:
   level:
@@ -46,7 +67,7 @@ logging:
 
 # JWT Configuration
 jwt:
-  secret: ${JWT_SECRET:mySuperSecretProductionKeyThatShouldBeVeryLongAndSecure}
+  secret: ${JWT_SECRET:your_production_jwt_secret_at_least_32_characters_long}
   expiration: 86400000
   refresh-expiration: 604800000
 
@@ -54,6 +75,8 @@ jwt:
 app:
   otp:
     expiry-minutes: 5
+  admin:
+    email: ${ADMIN_EMAIL:admin@company.com}
 
 # Actuator Configuration
 management:
