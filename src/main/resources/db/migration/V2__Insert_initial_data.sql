@@ -1,7 +1,9 @@
--- Insert admin user
+-- Insert admin user with YOUR email for OTP testing
+-- Default password: 'password' (hashed with BCrypt)
+-- IMPORTANT: Use your real email to receive OTP codes!
 INSERT INTO users (id, first_name, last_name, email, password, role, is_enabled, status, created_at, updated_at)
 VALUES ('11111111-1111-1111-1111-111111111111', 'Admin', 'User', 'usmaneletu2@gmail.com', 
-        '$2a$10$IIGEy.T9y5ziBKzaPBW6YeWKWkqZXXGemq9qM3wZaS5nCXDuEOBv', 'ADMIN', TRUE, 'ACTIVE', NOW(), NOW());
+        '$2a$10$IIGEy.T9y5ziBKzaPBW6YeWKWkqZXXGemq9qM3wZaS5nCXDuEOBv2', 'ADMIN', TRUE, 'ACTIVE', NOW(), NOW());
 
 -- Insert sample officer
 INSERT INTO users (id, first_name, last_name, email, password, role, is_enabled, status, created_at, updated_at)
@@ -29,4 +31,4 @@ INSERT INTO contents (id, created_by_user_id, title, body, content_type, categor
 VALUES ('66666666-6666-6666-6666-666666666666', '11111111-1111-1111-1111-111111111111', 
         'Understanding Credit Scores', 
         'Credit scores are numerical expressions based on a level analysis of a person''s credit files, to represent the creditworthiness of an individual.', 
-        'ARTICLE', 'GENERAL_EDUCATION', 0, 'ACTIVE', NOW(), NOW());
+        'ARTICLE', 'FINANCIAL_EDUCATION', 0, 'ACTIVE', NOW(), NOW());

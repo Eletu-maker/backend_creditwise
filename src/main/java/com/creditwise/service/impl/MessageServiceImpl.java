@@ -5,7 +5,9 @@ import com.creditwise.entity.User;
 import com.creditwise.repository.MessageRepository;
 import com.creditwise.repository.UserRepository;
 import com.creditwise.service.MessageService;
+import com.creditwise.service.AssignmentValidationService;
 import com.creditwise.exception.ResourceNotFoundException;
+import com.creditwise.exception.UnauthorizedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +23,9 @@ public class MessageServiceImpl implements MessageService {
 
     @Autowired
     private UserRepository userRepository;
+    
+    @Autowired
+    private AssignmentValidationService assignmentValidationService;
 
     @Override
     @Transactional
@@ -29,6 +34,13 @@ public class MessageServiceImpl implements MessageService {
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", senderId));
         User receiver = userRepository.findById(receiverId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", receiverId));
+
+        // Validate that sender and receiver are assigned to each other (unless admin involved)
+        try {
+            assignmentValidationService.validateMessagePermission(senderId, receiverId);
+        } catch (UnauthorizedException e) {
+            throw new UnauthorizedException("Message sending not allowed: " + e.getMessage());
+        }
 
         // Generate conversation ID based on the two users' IDs (smaller ID first to ensure consistency)
         String conversationId = senderId.compareTo(receiverId) < 0 
@@ -49,8 +61,12 @@ public class MessageServiceImpl implements MessageService {
 
     @Override
     public List<Message> getConversation(UUID userId1, UUID userId2) {
-        return messageRepository.findBySenderIdAndReceiverIdOrReceiverIdAndSenderIdOrderByCreatedAtAsc(
-                userId1, userId2, userId1, userId2);
+        // Generate conversation ID based on the two users' IDs (smaller ID first to ensure consistency)
+        String conversationId = userId1.compareTo(userId2) < 0 
+                ? userId1.toString() + "_" + userId2.toString()
+                : userId2.toString() + "_" + userId1.toString();
+        
+        return messageRepository.findByConversationIdOrderByCreatedAtAsc(conversationId);
     }
 
     @Override

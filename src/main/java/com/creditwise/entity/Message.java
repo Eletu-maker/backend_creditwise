@@ -31,6 +31,7 @@ public class Message extends BaseEntity {
     private String messageText;
 
     @Column(name = "is_read", nullable = false)
+    @Builder.Default
     private boolean isRead = false;
 
     @Column(name = "message_type", nullable = false)

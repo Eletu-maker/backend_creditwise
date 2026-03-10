@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket Test Client</title>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+</head>
+<body>
+    <h1>CreditWise WebSocket Test Client</h1>
+    
+    <div>
+        <label>JWT Token:</label>
+        <input type="text" id="jwtToken" placeholder="Enter JWT token" style="width: 500px;">
+    </div>
+    
+    <div>
+        <label>Receiver ID:</label>
+        <input type="text" id="receiverId" placeholder="Enter receiver UUID">
+    </div>
+    
+    <div>
+        <button onclick="connect()">Connect</button>
+        <button onclick="disconnect()">Disconnect</button>
+    </div>
+    
+    <div>
+        <input type="text" id="messageInput" placeholder="Enter message">
+        <button onclick="sendMessage()">Send Message</button>
+    </div>
+    
+    <div>
+        <h3>Messages:</h3>
+        <div id="messages" style="border: 1px solid #ccc; height: 300px; overflow-y: scroll; padding: 10px;"></div>
+    </div>
+
+    <script>
+        let stompClient = null;
+        let connected = false;
+
+        function connect() {
+            const token = document.getElementById('jwtToken').value;
+            if (!token) {
+                alert('Please enter JWT token');
+                return;
+            }
+
+            const socket = new SockJS('http://localhost:8080/ws');
+            stompClient = Stomp.over(socket);
+            
+            // Add JWT token to STOMP headers (not HTTP headers)
+            const headers = {
+                'Authorization': 'Bearer ' + token
+            };
+
+            stompClient.connect(headers, function (frame) {
+                console.log('Connected: ' + frame);
+                connected = true;
+                
+                // Subscribe to user-specific message queue
+                stompClient.subscribe('/user/queue/messages', function (message) {
+                    const messageBody = JSON.parse(message.body);
+                    showMessage(messageBody);
+                });
+                
+                addToMessages('✅ Connected to WebSocket successfully');
+            }, function (error) {
+                console.log('Connection error: ' + error);
+                addToMessages('❌ Connection error: ' + error);
+                connected = false;
+            });
+        }
+
+        function disconnect() {
+            if (stompClient !== null) {
+                stompClient.disconnect();
+                connected = false;
+                addToMessages('Disconnected from WebSocket');
+            }
+        }
+
+        function sendMessage() {
+            if (!connected) {
+                alert('Not connected to WebSocket');
+                return;
+            }
+            
+            const receiverId = document.getElementById('receiverId').value;
+            const messageText = document.getElementById('messageInput').value;
+            
+            if (!receiverId || !messageText) {
+                alert('Please enter receiver ID and message');
+                return;
+            }
+
+            const message = {
+                messageText: messageText
+            };
+
+            stompClient.send('/app/chat/' + receiverId, {}, JSON.stringify(message));
+            document.getElementById('messageInput').value = '';
+        }
+
+        function showMessage(message) {
+            const messagesDiv = document.getElementById('messages');
+            const messageElement = document.createElement('div');
+            messageElement.style.marginBottom = '10px';
+            messageElement.style.padding = '5px';
+            messageElement.style.border = '1px solid #ddd';
+            
+            messageElement.innerHTML = `
+                <strong>From:</strong> ${message.senderName || message.senderId}<br>
+                <strong>To:</strong> ${message.receiverName || message.receiverId}<br>
+                <strong>Message:</strong> ${message.messageText}<br>
+                <strong>Time:</strong> ${message.createdAt || 'Now'}
+            `;
+            
+            messagesDiv.appendChild(messageElement);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function addToMessages(text) {
+            const messagesDiv = document.getElementById('messages');
+            const messageElement = document.createElement('div');
+            messageElement.style.marginBottom = '5px';
+            messageElement.style.color = '#666';
+            messageElement.textContent = text;
+            messagesDiv.appendChild(messageElement);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+    </script>
+</body>
+</html>

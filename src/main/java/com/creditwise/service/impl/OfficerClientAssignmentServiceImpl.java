@@ -8,6 +8,8 @@ import com.creditwise.exception.ResourceNotFoundException;
 import com.creditwise.repository.OfficerClientAssignmentRepository;
 import com.creditwise.repository.UserRepository;
 import com.creditwise.service.OfficerClientAssignmentService;
+import com.creditwise.service.SubscriptionService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +29,9 @@ public class OfficerClientAssignmentServiceImpl implements OfficerClientAssignme
     @Autowired
     private UserRepository userRepository;
 
+    @Autowired
+    private SubscriptionService subscriptionService;
+
     @Override
     @Transactional
     public OfficerClientAssignment assignOfficerToClient(UUID officerId, UUID clientId) {
@@ -35,6 +40,10 @@ public class OfficerClientAssignmentServiceImpl implements OfficerClientAssignme
         User client = userRepository.findById(clientId)
                 .orElseThrow(() -> new ResourceNotFoundException("Client", "id", clientId));
 
+        // Check if client has active subscription (payment)
+        if (!subscriptionService.isClientSubscribed(clientId)) {
+            throw new RuntimeException("Client must have an active subscription before an officer can be assigned");
+        }
         // Check if client is already assigned to an officer
         if (isClientAlreadyAssigned(clientId)) {
             throw new ResourceNotFoundException("Client", "id", clientId);
@@ -42,10 +51,12 @@ public class OfficerClientAssignmentServiceImpl implements OfficerClientAssignme
 
         // Check if officer has reached capacity
         int activeAssignments = getActiveAssignmentCountForOfficer(officerId);
-        // For now, using a default capacity of 10, in a real system this would be in OfficerProfile
-        int maxCapacity = 10; 
+        // For now, using a default capacity of 10, in a real system this would be in
+        // OfficerProfile
+        int maxCapacity = 10;
         if (activeAssignments >= maxCapacity) {
-            throw new OfficerCapacityExceededException("Officer has reached maximum active client capacity of " + maxCapacity);
+            throw new OfficerCapacityExceededException(
+                    "Officer has reached maximum active client capacity of " + maxCapacity);
         }
 
         OfficerClientAssignment assignment = OfficerClientAssignment.builder()
@@ -59,12 +70,14 @@ public class OfficerClientAssignmentServiceImpl implements OfficerClientAssignme
 
     @Override
     public List<OfficerClientAssignment> getActiveAssignmentsForOfficer(UUID officerId) {
-        return assignmentRepository.findByOfficerIdAndAssignmentStatus(officerId, OfficerClientAssignment.AssignmentStatus.ACTIVE);
+        return assignmentRepository.findByOfficerIdAndAssignmentStatus(officerId,
+                OfficerClientAssignment.AssignmentStatus.ACTIVE);
     }
 
     @Override
     public List<OfficerClientAssignmentDto> getAllActiveAssignments() {
-        List<OfficerClientAssignment> assignments = assignmentRepository.findByAssignmentStatusWithEagerFetch(OfficerClientAssignment.AssignmentStatus.ACTIVE);
+        List<OfficerClientAssignment> assignments = assignmentRepository
+                .findByAssignmentStatusWithEagerFetch(OfficerClientAssignment.AssignmentStatus.ACTIVE);
         return assignments.stream()
                 .map(OfficerClientAssignmentDto::fromEntity)
                 .collect(Collectors.toList());
@@ -78,18 +91,20 @@ public class OfficerClientAssignmentServiceImpl implements OfficerClientAssignme
     }
 
     @Override
-    public OfficerClientAssignment updateAssignmentStatus(UUID assignmentId, OfficerClientAssignment.AssignmentStatus status) {
+    public OfficerClientAssignment updateAssignmentStatus(UUID assignmentId,
+            OfficerClientAssignment.AssignmentStatus status) {
         OfficerClientAssignment assignment = assignmentRepository.findById(assignmentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Assignment", "id", assignmentId));
-        
+
         assignment.setAssignmentStatus(status);
         assignment.setUpdatedAt(LocalDateTime.now());
-        
+
         return assignmentRepository.save(assignment);
     }
 
     @Override
-    public List<OfficerClientAssignment> findByOfficerIdAndAssignmentStatus(UUID officerId, OfficerClientAssignment.AssignmentStatus status) {
+    public List<OfficerClientAssignment> findByOfficerIdAndAssignmentStatus(UUID officerId,
+            OfficerClientAssignment.AssignmentStatus status) {
         return assignmentRepository.findByOfficerIdAndAssignmentStatus(officerId, status);
     }
 
@@ -97,42 +112,43 @@ public class OfficerClientAssignmentServiceImpl implements OfficerClientAssignme
     public List<OfficerClientAssignment> findByOfficerIdAndClientId(UUID officerId, UUID clientId) {
         return assignmentRepository.findByOfficerIdAndClientId(officerId, clientId);
     }
-    
+
     @Override
     public Optional<OfficerClientAssignment> findActiveAssignmentByOfficerIdAndClientId(UUID officerId, UUID clientId) {
         List<OfficerClientAssignment> assignments = assignmentRepository.findByOfficerIdAndClientIdAndAssignmentStatus(
-            officerId, clientId, OfficerClientAssignment.AssignmentStatus.ACTIVE);
+                officerId, clientId, OfficerClientAssignment.AssignmentStatus.ACTIVE);
         // Return the most recent active assignment
         return assignments.isEmpty() ? Optional.empty() : Optional.of(assignments.get(0));
     }
-    
+
     @Override
     public List<OfficerClientAssignment> getAssignmentsForClient(UUID clientId) {
         return assignmentRepository.findByClientId(clientId);
     }
-    
+
     @Override
     @Transactional
     public void endAssignment(UUID assignmentId) {
         OfficerClientAssignment assignment = assignmentRepository.findById(assignmentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Assignment", "id", assignmentId));
-        
+
         assignment.setAssignmentStatus(OfficerClientAssignment.AssignmentStatus.ENDED);
         assignment.setUpdatedAt(LocalDateTime.now());
         assignmentRepository.save(assignment);
     }
-    
+
     @Override
     public int getActiveAssignmentCountForOfficer(UUID officerId) {
-        List<OfficerClientAssignment> activeAssignments = 
-            assignmentRepository.findByOfficerIdAndAssignmentStatus(officerId, OfficerClientAssignment.AssignmentStatus.ACTIVE);
+        List<OfficerClientAssignment> activeAssignments = assignmentRepository
+                .findByOfficerIdAndAssignmentStatus(officerId, OfficerClientAssignment.AssignmentStatus.ACTIVE);
         return activeAssignments.size();
     }
-    
+
     @Override
     public boolean isClientAlreadyAssigned(UUID clientId) {
         List<OfficerClientAssignment> assignments = assignmentRepository.findByClientId(clientId);
         return assignments.stream()
-            .anyMatch(assignment -> assignment.getAssignmentStatus() == OfficerClientAssignment.AssignmentStatus.ACTIVE);
+                .anyMatch(assignment -> assignment
+                        .getAssignmentStatus() == OfficerClientAssignment.AssignmentStatus.ACTIVE);
     }
 }

@@ -6,6 +6,7 @@ import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 
 @Entity
 @Table(name = "uploaded_credit_reports", indexes = {
@@ -48,5 +49,6 @@ public class UploadedCreditReport extends BaseEntity {
     private String recommendations;
 
     @Column(name = "is_expired")
+    @Builder.Default
     private Boolean isExpired = false;
 }

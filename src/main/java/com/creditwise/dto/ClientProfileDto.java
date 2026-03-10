@@ -2,11 +2,16 @@ package com.creditwise.dto;
 
 import com.creditwise.entity.ClientProfile;
 import lombok.Data;
-
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import lombok.Builder;
 
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class ClientProfileDto {
     private UUID id;
     private UUID userId;

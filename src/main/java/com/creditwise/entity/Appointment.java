@@ -43,6 +43,7 @@ public class Appointment extends BaseEntity {
     private String notes;
     
     @Column(name = "notified", nullable = false)
+    @Builder.Default
     private boolean notified = false;
 
     public enum AppointmentType {

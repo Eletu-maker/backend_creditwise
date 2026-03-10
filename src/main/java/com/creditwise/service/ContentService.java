@@ -15,4 +15,14 @@ public interface ContentService {
     Content updateContent(UUID contentId, ContentDto contentDto);
     void deleteContent(UUID contentId);
     void incrementViewCount(UUID contentId);
+    
+    // Content engagement methods
+    void likeContent(UUID contentId, String userId);
+    void unlikeContent(UUID contentId, String userId);
+    void dislikeContent(UUID contentId, String userId);
+    void undislikeContent(UUID contentId, String userId);
+    boolean isContentLikedByUser(UUID contentId, String userId);
+    boolean isContentDislikedByUser(UUID contentId, String userId);
+    long getLikeCount(UUID contentId);
+    long getDislikeCount(UUID contentId);
 }

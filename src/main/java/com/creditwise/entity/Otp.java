@@ -1,10 +1,11 @@
 package com.creditwise.entity;
 
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import org.hibernate.annotations.GenericGenerator;
 
 import java.time.LocalDateTime;
@@ -16,6 +17,7 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@EqualsAndHashCode(callSuper = true)
 public class Otp extends BaseEntity {
     
     @Id
@@ -33,6 +35,7 @@ public class Otp extends BaseEntity {
     private LocalDateTime expiresAt;
     
     @Column(name = "used", nullable = false)
+    @Builder.Default
     private Boolean used = false;
     
     public boolean isExpired() {

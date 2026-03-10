@@ -3,6 +3,7 @@ package com.creditwise.entity;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
@@ -39,9 +40,11 @@ public class PlanAssignment extends BaseEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(name = "assignment_status", nullable = false)
+    @Builder.Default
     private AssignmentStatus assignmentStatus = AssignmentStatus.PENDING;
 
     @Column(name = "progress_percentage", nullable = false)
+    @Builder.Default
     private Integer progressPercentage = 0;
 
     public enum AssignmentStatus {

@@ -6,6 +6,7 @@ import lombok.Setter;
 import lombok.experimental.SuperBuilder;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 
 @Entity
 @Table(name = "audit_logs", indexes = {
@@ -18,6 +19,7 @@ import lombok.AllArgsConstructor;
 @SuperBuilder
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 public class AuditLog extends BaseEntity {
 
     @Column(name = "user_id")

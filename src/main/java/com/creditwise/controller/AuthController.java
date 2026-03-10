@@ -5,7 +5,9 @@ import com.creditwise.dto.JwtResponse;
 import com.creditwise.dto.LoginRequest;
 import com.creditwise.dto.RegisterClientRequest;
 import com.creditwise.dto.AdminOtpLoginRequest;
+import com.creditwise.dto.UserProfile;
 import com.creditwise.service.AuthService;
+import com.creditwise.security.CustomUserDetails;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -44,6 +46,18 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.success(response, "User authenticated successfully"));
     }
     
+    @PostMapping("/admin/login")
+    public ResponseEntity<ApiResponse<JwtResponse>> adminLogin(@Valid @RequestBody LoginRequest loginRequest) {
+        // Same as regular login but specifically for admin
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        JwtResponse response = authService.authenticateUser(loginRequest);
+        return ResponseEntity.ok(ApiResponse.success(response, "Admin authenticated successfully"));
+    }
+    
     // Endpoint to initiate admin OTP login
     @PostMapping("/admin/initiate-otp-login")
     public ResponseEntity<ApiResponse<String>> initiateAdminOtpLogin(@RequestBody AdminOtpLoginRequest request) {
@@ -67,5 +81,20 @@ public class AuthController {
             authService.logout(email);
         }
         return ResponseEntity.ok(ApiResponse.success(null, "Logged out successfully"));
+    }
+    
+    @GetMapping("/me")
+    public ResponseEntity<ApiResponse<UserProfile>> getCurrentUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        
+        UserProfile profile = new UserProfile();
+        profile.setId(userDetails.getUser().getId().toString());
+        profile.setEmail(userDetails.getUser().getEmail());
+        profile.setFirstName(userDetails.getUser().getFirstName());
+        profile.setLastName(userDetails.getUser().getLastName());
+        profile.setRole(userDetails.getUser().getRole().toString());
+        
+        return ResponseEntity.ok(ApiResponse.success(profile, "User profile retrieved successfully"));
     }
 }

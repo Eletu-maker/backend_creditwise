@@ -1,6 +1,7 @@
 package com.creditwise.entity;
 
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
@@ -50,6 +51,7 @@ public class ClientProfile extends BaseEntity {
 
     @Column(name = "plan_status", nullable = false)
     @Enumerated(EnumType.STRING)
+    @Builder.Default
     private PlanStatus planStatus = PlanStatus.PENDING;
 
     public enum PlanStatus {

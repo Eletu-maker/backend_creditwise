@@ -1,6 +1,7 @@
 package com.creditwise.entity;
 
 import jakarta.persistence.*;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
@@ -41,6 +42,7 @@ public abstract class BaseEntity {
 
     @Column(name = "status")
     @Enumerated(EnumType.STRING)
+    @Builder.Default
     private Status status = Status.ACTIVE;
 
     public enum Status {

@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
@@ -50,6 +51,7 @@ public class User extends BaseEntity {
     private Role role;
 
     @Column(name = "is_enabled")
+    @Builder.Default
     private boolean isEnabled = false;
 
     public enum Role {

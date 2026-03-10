@@ -8,6 +8,7 @@ import com.creditwise.entity.PlanAssignment;
 import com.creditwise.entity.User;
 import com.creditwise.service.OfficerClientAssignmentService;
 import com.creditwise.service.PlanService;
+import com.creditwise.service.SubscriptionService;
 import com.creditwise.service.UserService;
 import com.creditwise.security.CustomUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +34,9 @@ public class AdminController {
     
     @Autowired
     private PlanService planService;
+    
+    @Autowired
+    private SubscriptionService subscriptionService;
 
     @PostMapping("/officers")
     public ResponseEntity<ApiResponse<User>> createOfficer(@RequestBody RegisterOfficerRequest registerRequest) {
@@ -56,6 +60,15 @@ public class AdminController {
     public ResponseEntity<ApiResponse<OfficerClientAssignment>> assignOfficerToClient(
             @RequestParam UUID officerId,
             @RequestParam UUID clientId) {
+        
+        // Check if client has an active subscription
+        boolean isSubscribed = subscriptionService.isClientSubscribed(clientId);
+        
+        if (!isSubscribed) {
+            return ResponseEntity.status(403)
+                    .body(ApiResponse.error("Client must have an active subscription before officer assignment"));
+        }
+        
         OfficerClientAssignment assignment = assignmentService.assignOfficerToClient(officerId, clientId);
         return ResponseEntity.ok(ApiResponse.success(assignment, "Officer assigned to client successfully"));
     }

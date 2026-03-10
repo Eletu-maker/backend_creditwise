@@ -16,6 +16,7 @@ import com.creditwise.service.AuthService;
 import com.creditwise.service.OtpAuthService;
 import com.creditwise.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -49,6 +50,9 @@ public class AuthServiceImpl implements AuthService {
     
     @Autowired
     private OfficerProfileRepository officerProfileRepository;
+    
+    @Value("${app.admin.email:admin@creditwise.com}")
+    private String adminEmail;
     @Override
     public JwtResponse authenticateUser(LoginRequest loginRequest) {
         Authentication authentication = authenticationManager.authenticate(
@@ -127,14 +131,14 @@ public class AuthServiceImpl implements AuthService {
             throw new RuntimeException("Invalid or expired OTP");
         }
         
-        // Check if the email is the specific admin email
-        if (!"usmaneletu2@gmail.com".equals(email)) {
-            throw new RuntimeException("Access denied. You are not an admin.");
-        }
-        
-        // Find the user by email
+        // Check if the email is the admin email from configuration
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+        
+        // Verify user is actually an admin
+        if (user.getRole() != User.Role.ADMIN) {
+            throw new RuntimeException("Access denied. You are not an admin.");
+        }
         
         String jwt = jwtUtils.generateJwtTokenForUser(user);
         String refreshToken = jwtUtils.generateRefreshTokenForUser(user);
@@ -152,8 +156,11 @@ public class AuthServiceImpl implements AuthService {
     
     @Override
     public String initiateAdminOtpLogin(String email) {
-        // Check if the email is the specific admin email
-        if (!"usmaneletu2@gmail.com".equals(email)) {
+        // Find user and verify they are an admin
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+        
+        if (user.getRole() != User.Role.ADMIN) {
             throw new RuntimeException("Access denied. You are not an admin.");
         }
         
