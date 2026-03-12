@@ -18,10 +18,12 @@ public class PaystackWebhookEvent {
     @GeneratedValue
     private UUID id;
 
+    @Column(unique = true)
+    private String eventId;
     private String eventType;
 
     private String reference;
-
+    private String signature;
     @Column(columnDefinition = "TEXT")
     private String payload;
 

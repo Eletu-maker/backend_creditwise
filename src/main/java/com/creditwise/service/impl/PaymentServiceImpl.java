@@ -11,10 +11,12 @@ import java.nio.charset.StandardCharsets;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.creditwise.dto.PaystackInitializeResponse;
 import com.creditwise.dto.PaymentDto;
 import com.creditwise.entity.Payment;
+import com.creditwise.entity.Payment.PaymentStatus;
 import com.creditwise.entity.PaystackWebhookEvent;
 import com.creditwise.entity.PaymentAuditLog;
 import com.creditwise.entity.User;
@@ -187,10 +189,11 @@ public class PaymentServiceImpl implements PaymentService {
 
         log.info("Processing webhook event {} for reference {}", event, reference);
 
+        JsonNode json = new ObjectMapper().valueToTree(webhookData);
         switch (event) {
 
             case "charge.success":
-                handleSuccessfulPayment(reference);
+                handleSuccessfulPayment(json);
                 break;
 
             case "charge.failed":
@@ -227,49 +230,48 @@ public class PaymentServiceImpl implements PaymentService {
         return PaymentDto.fromEntity(payment);
     }
 
-    private void handleSuccessfulPayment(String reference) {
+    private void handleSuccessfulPayment(JsonNode json) {
 
-        Payment payment = paymentRepository.findByReference(reference)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                "Payment not found with reference: " + reference));
+    JsonNode data = json.get("data");
 
-        if (payment.getPaymentStatus() == Payment.PaymentStatus.SUCCESS) {
-            log.info("Payment already processed for reference: {}", reference);
-            return;
-        }
+    String reference = data.get("reference").asText();
 
-        payment.setPaymentStatus(Payment.PaymentStatus.SUCCESS);
-        payment.setPaymentDate(LocalDateTime.now());
-        payment.setPaymentMethod("Paystack");
+    BigDecimal amount =
+            data.get("amount").decimalValue()
+                    .divide(BigDecimal.valueOf(100));
 
-        paymentRepository.save(payment);
+    String email =
+            data.get("customer").get("email").asText();
 
-        PaymentAuditLog auditLog = PaymentAuditLog.builder()
-                .paymentId(payment.getId())
-                .action("PAYMENT_SUCCESS")
-                .details("Payment confirmed via Paystack webhook")
-                .createdAt(LocalDateTime.now())
-                .build();
+    Payment payment =
+            paymentRepository.findByReference(reference)
+                    .orElseThrow();
 
-        auditLogRepository.save(auditLog);
+    if (payment.getPaymentStatus() == PaymentStatus.SUCCESS) {
+    log.info("Payment already processed for reference {}", reference);
+    return;
+}
 
-        subscriptionService.activateSubscription(
-                payment.getUser(),
-                payment.getAmount()
-        );
-
-        PaymentAuditLog subscriptionLog = PaymentAuditLog.builder()
-                .paymentId(payment.getId())
-                .action("SUBSCRIPTION_ACTIVATED")
-                .details("Subscription activated after successful payment")
-                .createdAt(LocalDateTime.now())
-                .build();
-
-        auditLogRepository.save(subscriptionLog);
-
-        log.info("Payment successful and subscription activated for user: {}",
-                payment.getUser().getEmail());
+    if (payment.getAmount().compareTo(amount) != 0) {
+        throw new RuntimeException("Amount mismatch detected");
     }
+
+    if (!payment.getUser().getEmail().equalsIgnoreCase(email)) {
+        throw new RuntimeException("Email mismatch");
+    }
+
+    payment.setPaymentStatus(PaymentStatus.SUCCESS);
+    payment.setPaymentDate(LocalDateTime.now());
+    payment.setPaymentMethod("Paystack");
+
+    paymentRepository.save(payment);
+
+    // 🔴 ACTIVATE SUBSCRIPTION
+    subscriptionService.activateSubscription(
+            payment.getUser(),
+            payment.getAmount()
+    );
+}
 
     private void handleFailedPayment(String reference) {
 
