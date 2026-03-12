@@ -15,5 +15,5 @@ public interface PaymentService {
     
     PaymentDto getPaymentByReference(String reference);
 
-    void processWebhook(Map<String, Object> payload, String signature);
+    void processWebhook(String payload, String signature);
 }

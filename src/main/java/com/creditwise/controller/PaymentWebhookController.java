@@ -23,13 +23,44 @@ public class PaymentWebhookController {
 
     // Existing webhook route (delegates to PaymentService)
     @PostMapping("/webhook")
-    public ResponseEntity<String> handleWebhook(
-            @RequestBody Map<String, Object> payload,
-            @RequestHeader(value = "x-paystack-signature", required = false) String signature
-    ) {
-        log.info("Received Paystack webhook");
-        paymentService.processWebhook(payload, signature);
-        return ResponseEntity.ok("Webhook processed");
-    }
+public ResponseEntity<String> handleWebhook(
+        @RequestBody String payload,
+        @RequestHeader("x-paystack-signature") String signature
+) {
 
+    paymentService.processWebhook(payload, signature);
+
+    return ResponseEntity.ok("Webhook received");
+}
+/** 
+    @PostMapping("/webhook/payment")
+public ResponseEntity<String> handlePaymentWebhook(@RequestBody Map<String, Object> payload) {
+    try {
+        Map<String, Object> data = (Map<String, Object>) payload.get("data");
+        String reference = (String) data.get("reference");
+        String status = (String) data.get("status");
+
+        Payment payment = paymentRepository.findByReference(reference)
+                .orElseThrow(() -> new ResourceNotFoundException("Payment not found"));
+
+        // Convert String to enum
+        try {
+            payment.setPaymentStatus(Payment.PaymentStatus.valueOf(status.toUpperCase()));
+        } catch (IllegalArgumentException e) {
+            log.warn("Unknown payment status received: {}", status);
+            payment.setPaymentStatus(Payment.PaymentStatus.PENDING); // fallback
+        }
+
+        payment.setPaymentDate(LocalDateTime.now());
+        paymentRepository.save(payment);
+
+        log.info("Payment {} updated via webhook to {}", reference, status);
+        return ResponseEntity.ok("Webhook received");
+
+    } catch (Exception e) {
+        log.error("Error processing webhook: {}", e.getMessage());
+        return ResponseEntity.status(500).body("Error processing webhook");
+    }
+}
+*/
 }
